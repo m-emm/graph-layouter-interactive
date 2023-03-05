@@ -4,6 +4,9 @@ import GraphSvg from './GraphSvg.js';
 
 function App() {
   const listNodes = [{x:20,y:20},{x:50,y:70}]
+  const forces = [
+    (node) => ( {vx: -( node.x -50 ) * 0.1 , vy : -( node.y -50 ) * 0.1 } )
+  ]
   return (
     <div className="App">
       <header className="App-header">
@@ -20,7 +23,7 @@ function App() {
           Learn React
         </a>
         <p></p>
-        <GraphSvg nodes={listNodes}></GraphSvg>
+        <GraphSvg nodes={listNodes} velocityDecay="0.95" forces={forces}></GraphSvg>
       </header>
     </div>
   );

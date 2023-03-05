@@ -3,37 +3,43 @@ import GraphNode from './GraphNode';
 import { timer, interval } from 'd3-timer';
 
 
-function GraphSvg({ nodes }) {
+function GraphSvg({ nodes, velocityDecay, forces }) {
 
-    const [nodesPositions, setNodePositions] = useState(nodes.map((node) => { return { x: node.x, y: node.y } }));
-    const [numRuns, setNumRuns] = useState(0);
+
+    const [nodesMechanics, setNodesMechanics] = useState(nodes.map((node) => { return { x: node.x, y: node.y, vx: 0, vy: 0, fx: 0, fy: 0, fixed: { x: null, y: null } } }))
+
+
 
     function handleStep() {
-        nodesPositions.forEach((node) => {
-            console.log("BEFORE: node: " + node.x + " " + node.y)
-        });
 
-        const newNodesPositions = function () { return nodesPositions.map((node) => 
-           ( { x: ( 0.5 * node.x )   , y: node.y  } ) );
+        const newNodesMechanics = function (currentNodesMechanics) {
+            return currentNodesMechanics.map(
+                (node) => {                 
+                const velocity = forces.reduce((velocity, force) => {
+                        const currentVelocity = force(node);
+                        return { vx: velocity.vx + currentVelocity.vx, vy: velocity.vy + currentVelocity.vy }
+                    }, { vx: 0, vy: 0 });
+                 return { x: node.x + ( node.vx + velocity.vx), 
+                    y: node.y +(  node.vy + velocity.vy), 
+                    vx: (node.vx + velocity.vx) * velocityDecay, 
+                    vy: (node.vy + velocity.vy) * velocityDecay, 
+                    fx: node.fx, 
+                    fy: node.fy, 
+                    } 
+                })
         };
-        newNodesPositions().forEach((node) => {
-            console.log("nod AFTER: " + node.x + " " + node.y)
-        });
-        setNodePositions(newNodesPositions);
-        console.log("Num Runs:" + numRuns);
+        setNodesMechanics(newNodesMechanics);
     }
 
     useEffect(() => {
         const my_timer = interval(() => {
             handleStep();
-            setNumRuns(() => numRuns+1)
-
-            console.log("node positions: " + nodesPositions.map((node) => {return node.x + " " + node.y + " "}) )
-        }, 500);
+            console.log("node positions: " + nodesMechanics.map((node) => { return node.x + " " + node.y + " " }))
+        }, 10);
         return () => my_timer.stop();
     }, []);
 
-    const listNodes = nodesPositions.map((node) =>
+    const listNodes = nodesMechanics.map((node) =>
         <GraphNode x={node.x} y={node.y} />
     );
     return (

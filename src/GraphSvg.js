@@ -13,19 +13,24 @@ function GraphSvg({ nodes, velocityDecay, forces }) {
     function handleStep() {
 
         const newNodesMechanics = function (currentNodesMechanics) {
+            const velocitiesRaw = forces.map((force) => { return force(currentNodesMechanics) })
+            const velocities =velocitiesRaw.reduce((acc,val) => { return acc.map( (v,i) => { return {vx: v.vx +val[i].vx, vy: v.vy+val[i].vy} } ) })
+            console.log("There are " + velocities.length + " velocities")
+
+            
+                // .reduce((acc, val) => { return acc.map((v, i) => { return { vx: v.vx + val[i].vx, vy: v.vy + val[i].vy } }) })
+
             return currentNodesMechanics.map(
-                (node) => {                 
-                const velocity = forces.reduce((velocity, force) => {
-                        const currentVelocity = force(node);
-                        return { vx: velocity.vx + currentVelocity.vx, vy: velocity.vy + currentVelocity.vy }
-                    }, { vx: 0, vy: 0 });
-                 return { x: node.x + ( node.vx + velocity.vx), 
-                    y: node.y +(  node.vy + velocity.vy), 
-                    vx: (node.vx + velocity.vx) * velocityDecay, 
-                    vy: (node.vy + velocity.vy) * velocityDecay, 
-                    fx: node.fx, 
-                    fy: node.fy, 
-                    } 
+                (node, i) => {
+
+                    return {
+                        x: node.x + (node.vx + velocities[i].vx),
+                        y: node.y + (node.vy + velocities[i].vy),
+                        vx: (node.vx + velocities[i].vx) * velocityDecay,
+                        vy: (node.vy + velocities[i].vy) * velocityDecay,
+                        fx: node.fx,
+                        fy: node.fy,
+                    }
                 })
         };
         setNodesMechanics(newNodesMechanics);
@@ -44,7 +49,7 @@ function GraphSvg({ nodes, velocityDecay, forces }) {
     );
     return (
         <div className="GraphSvg">
-            <svg width="100%" height="100%" viewBox="0 0 100 100">
+            <svg width="1000" height="800" viewBox="0 0 100 100">
                 {listNodes}
             </svg>
         </div>

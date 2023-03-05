@@ -8,14 +8,14 @@ import {borderForce} from './BorderForce.js';
 
 function App() {
   const width = 2000;
-  const height = 800;
+  const height = 1000;
   let nodeRadius = 60
-  const centerForceStrength = 0.2
+  const centerForceStrength = 0.5
   const listNodes = [{ x: 20, y: 20 }, { x: 50, y: 70 }, { x: 80, y: 20 } , { x: 20, y: 70 }, { x: 80, y: 70 }, { x: 700, y: 800 },{ x: 20, y: 70 }, { x: 80, y: 70 }, { x: 700, y: 800 }]
   const forces = [
      (nodes) => { return nodes.map((node) => ({ vx: -(node.x - width/2 ) * centerForceStrength/100, vy: -(node.y - height/2) * centerForceStrength/100 })) },
-     multiBodyForce(0.1)
-    , borderForce(width,height, nodeRadius,0.1)
+     multiBodyForce(0.5)
+    , borderForce(width,height, nodeRadius,0.4)
   ]
   
 

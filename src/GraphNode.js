@@ -1,6 +1,6 @@
 function GraphNode({x,y}) {
     return(
-        <circle cx={x} cy={y} r="10" stroke="black" stroke-width="3" fill="red" />
+        <circle cx={x} cy={y} r="10" stroke="black" strokeWidth="1" fill="red" />
     )
 }
 

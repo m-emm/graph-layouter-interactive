@@ -14,7 +14,7 @@ function App() {
   let listNodes = []
   for(let i=0;i<5;i++) {
     for(let j=0;j<5;j++) {
-      listNodes.push({x: i*nodeRadius*2, y: j*nodeRadius*2})
+      listNodes.push({x: i*nodeRadius*2, y: j*nodeRadius*2, name: "Node "+i+" "+j})
     }     
   }
 

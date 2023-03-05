@@ -9,7 +9,7 @@ function GraphSvg({ nodes, edges,velocityDecay, forces ,nodeRadius, width, heigh
 
     const svgRootRef = useRef(null);
 
-    const [nodesMechanics, setNodesMechanics] = useState(nodes.map((node, i) => { return { x: node.x, y: node.y, vx: 0, vy: 0, fx: 0, fy: 0, index: i, locked: false } }))
+    const [nodesMechanics, setNodesMechanics] = useState(nodes.map((node, i) => { return { x: node.x, y: node.y, vx: 0, vy: 0, fx: 0, fy: 0, index: i, locked: false,name:node.name } }))
     const [dragging, setDragging] = useState(false);
     const [dragStartCoords, setDragStartCoords] = useState({ click: { x: 0, y: 0 }, node: {} });
     const [currentSVGParams, setCurrentSVGParams] = useState({ x: 0, y: 0, scale: 1 });
@@ -58,6 +58,7 @@ function GraphSvg({ nodes, edges,velocityDecay, forces ,nodeRadius, width, heigh
                         index: node.index,
                         locked: node.locked,
                         dragging: node.dragging
+                        ,name:node.name
 
 
                     }
@@ -81,9 +82,9 @@ function GraphSvg({ nodes, edges,velocityDecay, forces ,nodeRadius, width, heigh
         const newNodesMechanics = nodesMechanics.map((node) => {
             if (node.index === index) {
                 if (node.locked && !forceLock) {
-                    return { x: node.fx, y: node.fy, vx: node.vx, vy: node.vy, fx: null, fy: null, index: node.index, locked: false , dragging: node.dragging}
+                    return { x: node.fx, y: node.fy, vx: node.vx, vy: node.vy, fx: null, fy: null, index: node.index, locked: false , dragging: node.dragging,name:node.name}
                 } else {
-                    return { x: node.x, y: node.y, vx: node.vx, vy: node.vy, fx: node.x, fy: node.y, index: node.index, locked: true , dragging: node.dragging}
+                    return { x: node.x, y: node.y, vx: node.vx, vy: node.vy, fx: node.x, fy: node.y, index: node.index, locked: true , dragging: node.dragging,name:node.name}
                 }
             }
             else {
@@ -104,7 +105,7 @@ function GraphSvg({ nodes, edges,velocityDecay, forces ,nodeRadius, width, heigh
                 const x = dragStartCoords.node.x + (currentDragSVG.x - dragStartCoords.click.x);
                 const y = dragStartCoords.node.y + (currentDragSVG.y - dragStartCoords.click.y);
 
-                return { x: x, y: y, vx: 0, vy: 0, fx: x, fy: y, index: node.index, locked: node.locked , dragging: node.dragging}
+                return { x: x, y: y, vx: 0, vy: 0, fx: x, fy: y, index: node.index, locked: node.locked , dragging: node.dragging,name:node.name}
             } else {
                 return node;
             }
@@ -138,7 +139,7 @@ function GraphSvg({ nodes, edges,velocityDecay, forces ,nodeRadius, width, heigh
 
             setNodesMechanics(nodesMechanics.map((node) => {
                 if (node.index === nodeIndex) {
-                    return { x: node.x, y: node.y, vx: 0, vy: 0, fx: node.x, fy: node.y, index: node.index, locked: node.locked, dragging: true }
+                    return { x: node.x, y: node.y, vx: 0, vy: 0, fx: node.x, fy: node.y, index: node.index, locked: node.locked, dragging: true ,name:node.name}
                 } else {
                     return node;
                 }
@@ -166,16 +167,16 @@ function GraphSvg({ nodes, edges,velocityDecay, forces ,nodeRadius, width, heigh
         setDraggedNodeIndex(-1);
         setNodesMechanics(nodesMechanics.map((node) => {
             if(node.index === draggedNodeIndex) {
-                return { x: node.x, y: node.y, vx: 0, vy: 0, fx: node.x, fy: node.y, index: node.index, locked: true, dragging: false }
+                return { x: node.x, y: node.y, vx: 0, vy: 0, fx: node.x, fy: node.y, index: node.index, locked: true, dragging: false ,name:node.name}
             } else {
-                return { x: node.x, y: node.y, vx: 0, vy: 0, fx: node.x, fy: node.y, index: node.index, locked: node.locked, dragging: false }
+                return { x: node.x, y: node.y, vx: 0, vy: 0, fx: node.x, fy: node.y, index: node.index, locked: node.locked, dragging: false ,name:node.name}
             }
         }));
 
     }
 
     const listNodes = nodesMechanics.map((node) =>
-        <GraphNode x={node.x} y={node.y} index={node.index} locked={node.locked} radius={nodeRadius}/>
+        <GraphNode x={node.x} y={node.y} index={node.index} locked={node.locked} radius={nodeRadius} name={node.name}/>
     );
 
     const listEdges = edges.map((edge) => 

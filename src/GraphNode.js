@@ -1,4 +1,4 @@
-function GraphNode({x,y,index,locked,radius}) {
+function GraphNode({x,y,index,name,locked,radius}) {
     let fill = "gray";
     if (locked) {
         fill = "red";
@@ -8,7 +8,8 @@ function GraphNode({x,y,index,locked,radius}) {
         <g>
             <circle class="node-circle" cx={x} cy={y} r={radius}   id={"node_"+index}/>
             <circle cx={x+radius*0.8} cy={y-radius*0.8} r={radius/5} stroke="black" strokeWidth="0.5" fill={fill} id={"locker_node_"+index}/>
-            <text id={"node_"+index} x={x} y={y} class="node-id" textAnchor="middle" alignmentBaseline="middle">{index}</text>
+            <text id={"node_"+index} x={x} y={y-radius*0.5} class="node-id" textAnchor="middle" alignmentBaseline="middle">{index}</text>
+            <text id={"node_"+index} x={x} y={y} class="node-name" textAnchor="middle" alignmentBaseline="middle">{name}</text>
         </g>
     )
 }

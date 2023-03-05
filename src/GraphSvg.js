@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import GraphNode from './GraphNode';
 import { timer, interval } from 'd3-timer';
+import './GraphSvg.css';
+
 
 
 function GraphSvg({ nodes, velocityDecay, forces }) {

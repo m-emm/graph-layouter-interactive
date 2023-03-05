@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef  } from 'react';
 import GraphNode from './GraphNode';
 import { timer, interval } from 'd3-timer';
 import './GraphSvg.css';
 
 
 
-function GraphSvg({ nodes, velocityDecay, forces }) {
+function GraphSvg({ nodes, velocityDecay, forces ,nodeRadius, width, height}) {
 
     const svgRootRef = useRef(null);
 
@@ -165,7 +165,7 @@ function GraphSvg({ nodes, velocityDecay, forces }) {
         setDragging(false);
         setDraggedNodeIndex(-1);
         setNodesMechanics(nodesMechanics.map((node) => {
-            if(node.index == draggedNodeIndex) {
+            if(node.index === draggedNodeIndex) {
                 return { x: node.x, y: node.y, vx: 0, vy: 0, fx: node.x, fy: node.y, index: node.index, locked: true, dragging: false }
             } else {
                 return { x: node.x, y: node.y, vx: 0, vy: 0, fx: node.x, fy: node.y, index: node.index, locked: node.locked, dragging: false }
@@ -175,17 +175,24 @@ function GraphSvg({ nodes, velocityDecay, forces }) {
     }
 
     const listNodes = nodesMechanics.map((node) =>
-        <GraphNode x={node.x} y={node.y} index={node.index} locked={node.locked} />
+        <GraphNode x={node.x} y={node.y} index={node.index} locked={node.locked} radius={nodeRadius}/>
     );
 
     const listDisplayNodes = nodesMechanics.map((node) => <li> {node.index} {node.dragging ? "dragging" : ""}</li>);
 
+    const viewBoxString = "0 0 " + width + " " + height;
     return (
         <div className="GraphSvg">
             <div>
-                <svg ref={svgRootRef} width="1000" height="800" viewBox="0 0 100 100" onMouseDown={(e) => grab(e)} onMouseMove={(e) => drag(e)} onMouseUp={(e) => drop(e)}>
+                <svg ref={svgRootRef} width={width} height={height} viewBox={viewBoxString} onMouseDown={(e) => grab(e)} onMouseMove={(e) => drag(e)} onMouseUp={(e) => drop(e)}>             
                     <rect id='BackDrop' x='-10%' y='-10%' width='110%' height='110%' fill='none' pointerEvents='all' />
+                    <line x1="-100" y1="0" x2="5000" y2="0" stroke="white" />
+                    <line x1="0" y1="-1000" x2="0" y2="5000" stroke="white" />
+                    <line x1={width} y1="-1000" x2={width} y2="5000" stroke="white" />
+                    <line x1="-100" y1={height} x2="5000" y2={height} stroke="white" />
+
                     {listNodes}
+
                 </svg>
             </div>
             <div>

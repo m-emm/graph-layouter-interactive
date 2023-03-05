@@ -9,7 +9,13 @@ svg text::selection {
 }
 
 .node-id {
-    font-size: 0.2em;
+    font-size: 20px;
     font-weight: regular;
     fill: #000;
+}
+
+.node-circle {
+    stroke: #000;
+    stroke-width: 0.1px;
+    fill: lightblue;
 }

@@ -23,7 +23,7 @@ const theta2 = 0.81;
 const distanceMin2 = 1;
 const distanceMax2 = Infinity;
 const alpha = 1;
-const global_strength = -30;
+const global_strength = -10;
 
 function accumulate(strengths) {
   return function (quad) {
@@ -123,7 +123,7 @@ function multibody_force(nodes) {
   out_nodes.forEach((node) => {
     tree.visit(apply(node, strengths))
   });
-  out_nodes.forEach((node) => { console.log(node.vx, node.vy) });
+  // out_nodes.forEach((node) => { console.log(node.vx, node.vy) });
   const retval = out_nodes.map((n) => ({ vx: n.vx, vy: n.vy }));
   return retval;
 }
@@ -132,7 +132,7 @@ function multibody_force(nodes) {
 function App() {
   const listNodes = [{ x: 20, y: 20 }, { x: 50, y: 70 }]
   const forces = [
-    (nodes) => { return nodes.map((node) => ({ vx: -(node.x - 50) * 0.1, vy: -(node.y - 50) * 0.1 })) },
+    (nodes) => { return nodes.map((node) => ({ vx: -(node.x - 50) * 0.01, vy: -(node.y - 50) * 0.01 })) },
     multibody_force
   ]
 

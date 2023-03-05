@@ -3,6 +3,7 @@ import './App.css';
 import GraphSvg from './GraphSvg.js';
 
 function App() {
+  const listNodes = [{x:20,y:20},{x:50,y:70}]
   return (
     <div className="App">
       <header className="App-header">
@@ -19,7 +20,7 @@ function App() {
           Learn React
         </a>
         <p></p>
-        <GraphSvg></GraphSvg>
+        <GraphSvg nodes={listNodes}></GraphSvg>
       </header>
     </div>
   );

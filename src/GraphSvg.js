@@ -74,11 +74,11 @@ function GraphSvg({ nodes, velocityDecay, forces }) {
     }, []);
 
 
-    function nodeClicked(index, e) {
+    function nodeClicked(index, forceLock) {
         console.log("node " + index + " clicked")
         const newNodesMechanics = nodesMechanics.map((node) => {
             if (node.index === index) {
-                if (node.locked) {
+                if (node.locked && !forceLock) {
                     return { x: node.fx, y: node.fy, vx: node.vx, vy: node.vy, fx: null, fy: null, index: node.index, locked: false , dragging: node.dragging}
                 } else {
                     return { x: node.x, y: node.y, vx: node.vx, vy: node.vy, fx: node.x, fy: node.y, index: node.index, locked: true , dragging: node.dragging}
@@ -155,14 +155,19 @@ function GraphSvg({ nodes, velocityDecay, forces }) {
     function drop(e) {
         console.log("dropped " + e.target.id)
         if(lockingNodeIndex !== -1) {
-            nodeClicked(lockingNodeIndex, e);
+            nodeClicked(lockingNodeIndex,false);
             setLockingNodeIndex(-1);
             return;
         }
+        if(!dragging) return;
         setDragging(false);
         setDraggedNodeIndex(-1);
         setNodesMechanics(nodesMechanics.map((node) => {
-            return { x: node.x, y: node.y, vx: 0, vy: 0, fx: node.x, fy: node.y, index: node.index, locked: node.locked, dragging: false }
+            if(node.index == draggedNodeIndex) {
+                return { x: node.x, y: node.y, vx: 0, vy: 0, fx: node.x, fy: node.y, index: node.index, locked: true, dragging: false }
+            } else {
+                return { x: node.x, y: node.y, vx: 0, vy: 0, fx: node.x, fy: node.y, index: node.index, locked: node.locked, dragging: false }
+            }
         }));
 
     }
@@ -182,7 +187,7 @@ function GraphSvg({ nodes, velocityDecay, forces }) {
                 </svg>
             </div>
             <div>
-                Dragging: {dragging ? "true" : "false"}
+                Dragging: {dragging ? "true" : "false"} dragged node index: {draggedNodeIndex}
                 <p></p>
                 Dragging start: {dragStartCoords.click.x} {dragStartCoords.click.y}
                 <p></p>

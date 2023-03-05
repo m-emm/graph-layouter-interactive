@@ -2,10 +2,10 @@ import React, { useState, useEffect, useRef  } from 'react';
 import GraphNode from './GraphNode';
 import { timer, interval } from 'd3-timer';
 import './GraphSvg.css';
+import GraphEdge from './GraphEdge';
 
 
-
-function GraphSvg({ nodes, velocityDecay, forces ,nodeRadius, width, height}) {
+function GraphSvg({ nodes, edges,velocityDecay, forces ,nodeRadius, width, height}) {
 
     const svgRootRef = useRef(null);
 
@@ -178,6 +178,10 @@ function GraphSvg({ nodes, velocityDecay, forces ,nodeRadius, width, height}) {
         <GraphNode x={node.x} y={node.y} index={node.index} locked={node.locked} radius={nodeRadius}/>
     );
 
+    const listEdges = edges.map((edge) => 
+        <GraphEdge x1={nodesMechanics[edge.source].x} y1={nodesMechanics[edge.source].y} x2={nodesMechanics[edge.target].x} y2={nodesMechanics[edge.target].y} />
+    );
+
     const listDisplayNodes = nodesMechanics.map((node) => <li> {node.index} {node.dragging ? "dragging" : ""}</li>);
 
     const viewBoxString = "0 0 " + width + " " + height;
@@ -190,6 +194,7 @@ function GraphSvg({ nodes, velocityDecay, forces ,nodeRadius, width, height}) {
                     <line x1="0" y1="-1000" x2="0" y2="5000" stroke="white" />
                     <line x1={width} y1="-1000" x2={width} y2="5000" stroke="white" />
                     <line x1="-100" y1={height} x2="5000" y2={height} stroke="white" />
+                    {listEdges}
 
                     {listNodes}
 

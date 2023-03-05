@@ -19,3 +19,8 @@ svg text::selection {
     stroke-width: 0.1px;
     fill: lightblue;
 }
+
+.graph-edge {
+    stroke: white;
+    stroke-width: 1.5px;
+}

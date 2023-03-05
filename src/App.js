@@ -10,8 +10,17 @@ function App() {
   const width = 2000;
   const height = 1000;
   let nodeRadius = 60
-  const centerForceStrength = 0.5
-  const listNodes = [{ x: 20, y: 20 }, { x: 50, y: 70 }, { x: 80, y: 20 } , { x: 20, y: 70 }, { x: 80, y: 70 }, { x: 700, y: 800 },{ x: 20, y: 70 }, { x: 80, y: 70 }, { x: 700, y: 800 }]
+  const centerForceStrength = 0.8
+  let listNodes = []
+  for(let i=0;i<5;i++) {
+    for(let j=0;j<5;j++) {
+      listNodes.push({x: i*nodeRadius*2, y: j*nodeRadius*2})
+    }     
+  }
+
+  const listEdges = [{source:1,target:2}]
+  
+  
   const forces = [
      (nodes) => { return nodes.map((node) => ({ vx: -(node.x - width/2 ) * centerForceStrength/100, vy: -(node.y - height/2) * centerForceStrength/100 })) },
      multiBodyForce(0.5)
@@ -26,7 +35,7 @@ function App() {
       <header className="App-header">
 
         <p></p>
-        <GraphSvg width={width}  height={height} nodes={listNodes} velocityDecay="0.6" forces={forces} nodeRadius={nodeRadius}></GraphSvg>
+        <GraphSvg width={width}  height={height} nodes={listNodes} edges = {listEdges} velocityDecay="0.6" forces={forces} nodeRadius={nodeRadius}></GraphSvg>
       </header>
     </div>
   );

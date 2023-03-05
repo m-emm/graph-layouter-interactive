@@ -130,10 +130,10 @@ function multibody_force(nodes) {
 
 
 function App() {
-  const listNodes = [{ x: 20, y: 20 }, { x: 50, y: 70 }]
+  const listNodes = [{ x: 20, y: 20 }, { x: 50, y: 70 }, { x: 80, y: 20 }]
   const forces = [
-    (nodes) => { return nodes.map((node) => ({ vx: -(node.x - 50) * 0.01, vy: -(node.y - 50) * 0.01 })) },
-    multibody_force
+    (nodes) => { return nodes.map((node) => ({ vx: -(node.x - 50) * 0.01, vy: -(node.y - 50) * 0.01 })) }
+    //,multibody_force
   ]
 
 

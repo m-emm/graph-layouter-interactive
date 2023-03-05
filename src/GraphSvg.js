@@ -13,6 +13,7 @@ function GraphSvg({ nodes, velocityDecay, forces }) {
     const [currentSVGParams, setCurrentSVGParams] = useState({ x: 0, y: 0, scale: 1 });
     const [currentDragPosition, setCurrentDragPosition] = useState({ x: 0, y: 0 });
     const [draggedNodeIndex, setDraggedNodeIndex] = useState(-1);
+    const [lockingNodeIndex, setLockingNodeIndex] = useState(-1);
 
 
     function screenToSVG(screenX, screenY) {
@@ -46,14 +47,16 @@ function GraphSvg({ nodes, velocityDecay, forces }) {
                 (node, i) => {
 
                     return {
-                        x: node.locked ? node.fx : node.x + (node.vx + velocities[i].vx),
-                        y: node.locked ? node.fy : node.y + (node.vy + velocities[i].vy),
+                        x: node.locked ? node.fx :(  node.x + ( node.dragging ? 0 : (node.vx + velocities[i].vx) ) ) ,
+                        y: node.locked ? node.fy :(  node.y + ( node.dragging ? 0 : (node.vy + velocities[i].vy) )  ) ,
                         vx: (node.vx + velocities[i].vx) * velocityDecay,
                         vy: (node.vy + velocities[i].vy) * velocityDecay,
                         fx: node.fx,
                         fy: node.fy,
                         index: node.index,
-                        locked: node.locked
+                        locked: node.locked,
+                        dragging: node.dragging
+
 
                     }
                 })
@@ -70,26 +73,15 @@ function GraphSvg({ nodes, velocityDecay, forces }) {
         return () => my_timer.stop();
     }, []);
 
-    function lockNode(index) {
-        const newNodesMechanics = nodesMechanics.map((node) => {
-            if (node.index === index) {
-                return { x: node.x, y: node.x, vx: node.vx, vy: node.vy, fx: node.x, fy: node.x, index: node.index, locked: true }
-            } else {
-                return node
-            }
-        })
-        setNodesMechanics(newNodesMechanics);
-
-    }
 
     function nodeClicked(index, e) {
         console.log("node " + index + " clicked")
         const newNodesMechanics = nodesMechanics.map((node) => {
             if (node.index === index) {
                 if (node.locked) {
-                    return { x: node.fx, y: node.fy, vx: node.vx, vy: node.vy, fx: null, fy: null, index: node.index, locked: false }
+                    return { x: node.fx, y: node.fy, vx: node.vx, vy: node.vy, fx: null, fy: null, index: node.index, locked: false , dragging: node.dragging}
                 } else {
-                    return { x: node.x, y: node.y, vx: node.vx, vy: node.vy, fx: node.x, fy: node.y, index: node.index, locked: true }
+                    return { x: node.x, y: node.y, vx: node.vx, vy: node.vy, fx: node.x, fy: node.y, index: node.index, locked: true , dragging: node.dragging}
                 }
             }
             else {
@@ -110,7 +102,7 @@ function GraphSvg({ nodes, velocityDecay, forces }) {
                 const x = dragStartCoords.node.x + (currentDragSVG.x - dragStartCoords.click.x);
                 const y = dragStartCoords.node.y + (currentDragSVG.y - dragStartCoords.click.y);
 
-                return { x: x, y: y, vx: 0, vy: 0, fx: x, fy: y, index: node.index, locked: node.locked }
+                return { x: x, y: y, vx: 0, vy: 0, fx: x, fy: y, index: node.index, locked: node.locked , dragging: node.dragging}
             } else {
                 return node;
             }
@@ -127,41 +119,66 @@ function GraphSvg({ nodes, velocityDecay, forces }) {
 
     function grab(e) {
         if(dragging) return;
+        if(e.target.id.startsWith("locker_node_")) {
+            setLockingNodeIndex(parseInt(e.target.id.split("_")[2]));
+            return;
+        }
+
         const nodeIndex = nodeIndexFromEvent(e);
         if (nodeIndex !== null) {
             setDraggedNodeIndex(nodeIndex);
             setDragging(true);
             const currentDragSVG = screenToSVG(e.clientX, e.clientY);
 
-            setDragStartCoords({ click: { x: currentDragSVG.x, y: currentDragSVG.y }, node: nodesMechanics[nodeIndex] });
-            lockNode(nodeIndex);
+            setDragStartCoords({ click: { x: currentDragSVG.x, y: currentDragSVG.y }, node: nodesMechanics[nodeIndex] });            
 
-            
             setCurrentDragPosition({ x: e.clientX, y: e.clientY });
 
+            setNodesMechanics(nodesMechanics.map((node) => {
+                if (node.index === nodeIndex) {
+                    return { x: node.x, y: node.y, vx: 0, vy: 0, fx: node.x, fy: node.y, index: node.index, locked: node.locked, dragging: true }
+                } else {
+                    return node;
+                }
+            }));
         }
     }
 
     function drag(e) {
+        if(lockingNodeIndex !== -1) {
+            return;
+        }
         nodeDragged(draggedNodeIndex, e);
 
     }
 
     function drop(e) {
         console.log("dropped " + e.target.id)
+        if(lockingNodeIndex !== -1) {
+            nodeClicked(lockingNodeIndex, e);
+            setLockingNodeIndex(-1);
+            return;
+        }
         setDragging(false);
+        setDraggedNodeIndex(-1);
+        setNodesMechanics(nodesMechanics.map((node) => {
+            return { x: node.x, y: node.y, vx: 0, vy: 0, fx: node.x, fy: node.y, index: node.index, locked: node.locked, dragging: false }
+        }));
+
     }
 
     const listNodes = nodesMechanics.map((node) =>
         <GraphNode x={node.x} y={node.y} index={node.index} locked={node.locked} />
     );
+
+    const listDisplayNodes = nodesMechanics.map((node) => <li> {node.index} {node.dragging ? "dragging" : ""}</li>);
+
     return (
         <div className="GraphSvg">
             <div>
                 <svg ref={svgRootRef} width="1000" height="800" viewBox="0 0 100 100" onMouseDown={(e) => grab(e)} onMouseMove={(e) => drag(e)} onMouseUp={(e) => drop(e)}>
                     <rect id='BackDrop' x='-10%' y='-10%' width='110%' height='110%' fill='none' pointerEvents='all' />
                     {listNodes}
-                    <circle cx={dragStartCoords.node.x} cy={dragStartCoords.node.y} r="1" fill="green" />
                 </svg>
             </div>
             <div>
@@ -171,7 +188,13 @@ function GraphSvg({ nodes, velocityDecay, forces }) {
                 <p></p>
                 currentSVGParams: {currentSVGParams.x} {currentSVGParams.y} {currentSVGParams.scale}
                 <p></p>
+                lockingNodeIndex: {lockingNodeIndex}
+                <p></p>
+                
                 currentDragPosition: {currentDragPosition.x} {currentDragPosition.y} delta: {currentDragPosition.x - dragStartCoords.click.x} {currentDragPosition.y - dragStartCoords.click.y}
+                <ul>
+                    {listDisplayNodes}
+                </ul>
             </div>
 
         </div>

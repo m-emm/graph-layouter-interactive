@@ -1,0 +1,7 @@
+function GraphNode({x,y}) {
+    return(
+        <circle cx={x} cy={y} r="10" stroke="black" stroke-width="3" fill="red" />
+    )
+}
+
+export default GraphNode;

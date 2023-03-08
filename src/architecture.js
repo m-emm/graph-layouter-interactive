@@ -68,12 +68,16 @@ return `
   uses:
   - name: DatabaseAPI
     type: solid
+  - name: DatabaseServer
+    type: solid
 
 - name: ApplicationServer
   uses:
   - name: DatabaseAPI
     type: dashed
     edge_text: use
+- name: DatabaseServer
+  type: computation-node
 `;
 }
 

@@ -12,6 +12,7 @@ import DocumentNode from './DocumentNode';
 function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, height }) {
 
     const svgRootRef = useRef(null);
+    
 
     const [nodesMechanics, setNodesMechanics] = useState(nodes.map((node, i) => { return { x: node.x, y: node.y, vx: 0, vy: 0, fx: 0, fy: 0, index: i, locked: false, name: node.name, type: node.type } }))
     const [dragging, setDragging] = useState(false);
@@ -19,8 +20,15 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
     const [draggedNodeIndex, setDraggedNodeIndex] = useState(-1);
     const [lockingNodeIndex, setLockingNodeIndex] = useState(-1);
     const [svgText, setSvgText] = useState("");
-    const [simulationRunning, setSimulationRunning] = useState(true);
+    const [simulationRunning, setSimulationRunning_] = useState(true);
 
+
+    const simulationRunningRef = useRef(simulationRunning);
+
+    function setSimulationRunning(simulationRunning) {
+        simulationRunningRef.current = simulationRunning;
+        setSimulationRunning_(simulationRunning);
+    }
 
     function screenToSVG(screenX, screenY) {
         const svg = svgRootRef.current;
@@ -73,7 +81,7 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
     function handleStep() {
 
         const newNodesMechanics = function (currentNodesMechanics) {
-            if(!simulationRunning) return currentNodesMechanics;
+            if(!simulationRunningRef.current) return currentNodesMechanics;
             const velocitiesRaw = forces.map((force) => { return force(currentNodesMechanics) })
             const velocities = velocitiesRaw.reduce((acc, val) => { return acc.map((v, i) => { return { vx: v.vx + val[i].vx, vy: v.vy + val[i].vy } }) })
 
@@ -92,8 +100,10 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
 
             // stop simulation if average unlocked velocity is below threshold
             if (maxUnlockedVelocityMagnitude < 0.1 && !dragging) {
-                console.log("simulation stopped");
-                setSimulationRunning(false);
+                if (simulationRunningRef.current) {
+                    console.log("simulation stopped");
+                    setSimulationRunning(false);
+                }                
                 return currentNodesMechanics;
             }
 
@@ -191,6 +201,7 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
     }
 
     function drag(e) {
+        if(!dragging) return;
         if (lockingNodeIndex !== -1) {
             return;
         }
@@ -204,6 +215,7 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
         if (lockingNodeIndex !== -1) {
             nodeClicked(lockingNodeIndex, false);
             setLockingNodeIndex(-1);
+            setSimulationRunning(true);
             return;
         }
         if (!dragging) return;

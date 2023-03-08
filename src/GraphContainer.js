@@ -12,12 +12,18 @@ function GraphContainer({width,height,nodeRadius}) {
   const centerForceStrength = 1.0
   const numCols = 5;
   const ref = React.useRef();
-  const [size, setSize] = React.useState({width: width, height: height});
+  const sizeRef = React.useRef({width: width, height: height});
+  const [size, setSize_] = React.useState({width: width, height: height});
+
+  function setSize(newSize) {
+    sizeRef.current = newSize;
+    setSize_(newSize);
+  }
 
   useLayoutEffect(() => {
     function updateSize() {
         if(ref.current) {
-            setSize({width: ref.current.offsetWidth, height: ref.current.offsetHeight});
+            setSize({width: ref.current.offsetWidth, height: ref.current.offsetWidth*0.7 });
         }
     } 
     window.addEventListener('resize', updateSize);
@@ -52,13 +58,13 @@ function GraphContainer({width,height,nodeRadius}) {
     }
   }
 
-  const forces = [
-    (nodes) => { return nodes.map((node) => ({ vx: -(node.x - width / 2) * centerForceStrength / 100, vy: -(node.y - height / 2) * centerForceStrength / 100 })) },
+  const forces = ( () => [
+    (nodes) => { return nodes.map((node) => ({ vx: -(node.x - sizeRef.current.width / 2) * centerForceStrength / 100, vy: -(node.y - sizeRef.current.height / 2) * centerForceStrength / 100 })) },
     multiBodyForce(0.3)
-    , borderForce(size.width, size.height, nodeRadius*3, 0.4),
+    , borderForce(sizeRef.current.width, sizeRef.current.height, nodeRadius*3, 0.4),
     , linkForce(0.04,distance_function,listEdges )
     , collisionForce(0.1, radius_function)
-  ]
+  ])
 
 
 

@@ -82,7 +82,7 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
 
         const newNodesMechanics = function (currentNodesMechanics) {
             if(!simulationRunningRef.current) return currentNodesMechanics;
-            const velocitiesRaw = forces.map((force) => { return force(currentNodesMechanics) })
+            const velocitiesRaw = forces().map((force) => { return force(currentNodesMechanics) })
             const velocities = velocitiesRaw.reduce((acc, val) => { return acc.map((v, i) => { return { vx: v.vx + val[i].vx, vy: v.vy + val[i].vy } }) })
 
             // filter out velocities of locked nodes

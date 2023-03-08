@@ -1,66 +1,111 @@
-import React, { useState, useEffect, useRef  } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import GraphNode from './GraphNode';
 import { timer, interval } from 'd3-timer';
 import './GraphSvg.css';
 import GraphEdge from './GraphEdge';
+import InterfaceNode from './InterfaceNode';
+import ComputationNode from './ComputationNode';
+import xmlFormat from 'xml-formatter';
+import DocumentNode from './DocumentNode';
 
 
-function GraphSvg({ nodes, edges,velocityDecay, forces ,nodeRadius, width, height}) {
+function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, height }) {
 
     const svgRootRef = useRef(null);
 
-    const [nodesMechanics, setNodesMechanics] = useState(nodes.map((node, i) => { return { x: node.x, y: node.y, vx: 0, vy: 0, fx: 0, fy: 0, index: i, locked: false,name:node.name } }))
+    const [nodesMechanics, setNodesMechanics] = useState(nodes.map((node, i) => { return { x: node.x, y: node.y, vx: 0, vy: 0, fx: 0, fy: 0, index: i, locked: false, name: node.name, type: node.type } }))
     const [dragging, setDragging] = useState(false);
     const [dragStartCoords, setDragStartCoords] = useState({ click: { x: 0, y: 0 }, node: {} });
-    const [currentSVGParams, setCurrentSVGParams] = useState({ x: 0, y: 0, scale: 1 });
-    const [currentDragPosition, setCurrentDragPosition] = useState({ x: 0, y: 0 });
     const [draggedNodeIndex, setDraggedNodeIndex] = useState(-1);
     const [lockingNodeIndex, setLockingNodeIndex] = useState(-1);
+    const [svgText, setSvgText] = useState("");
+    const [simulationRunning, setSimulationRunning] = useState(true);
 
 
     function screenToSVG(screenX, screenY) {
         const svg = svgRootRef.current;
         var p = svg.createSVGPoint()
-         p.x = screenX
-         p.y = screenY
-         return p.matrixTransform(svg.getScreenCTM().inverse());
-     }
-     
-     function SVGToScreen(svgX, svgY) {
+        p.x = screenX
+        p.y = screenY
+        return p.matrixTransform(svg.getScreenCTM().inverse());
+    }
+
+    function SVGToScreen(svgX, svgY) {
         const svg = svgRootRef.current;
         var p = svg.createSVGPoint()
-         p.x = svgX
-         p.y = svgY
-         return p.matrixTransform(svg.getScreenCTM());
-     }
-     
+        p.x = svgX
+        p.y = svgY
+        return p.matrixTransform(svg.getScreenCTM());
+    }
+
+    function saveSvgText() {
+        const svg = svgRootRef.current;
+        if (svg) {
+            const xmlText = xmlFormat(svg.outerHTML);
+            setSvgText(xmlText);
+        }
+    }
+
+    function overwriteSvgText() {
+        setSvgText("Hallodri");
+    }
+
+    function saveLayout() {
+        localStorage.setItem("layout", JSON.stringify(nodesMechanics.map((node) => { return { x: node.x, y: node.y, name: node.name, fx: node.fx, fy: node.fy, locked: node.locked } })));
+    }
+
+    function loadLayout() {
+        const layout = JSON.parse(localStorage.getItem("layout"));
+        if (layout) {
+            const newNodesMechanics = nodesMechanics.map((node) => {
+                const layoutNode = layout.find((layoutNode) => { return layoutNode.name == node.name });
+                if (layoutNode) {
+                    return { ...node, x: layoutNode.x, y: layoutNode.y, fx: layoutNode.fx, fy: layoutNode.fy, locked: layoutNode.locked }
+                } else {
+                    return node;
+                }
+            })
+            setNodesMechanics(newNodesMechanics);
+        }
+    }
+
 
     function handleStep() {
 
         const newNodesMechanics = function (currentNodesMechanics) {
+            if(!simulationRunning) return currentNodesMechanics;
             const velocitiesRaw = forces.map((force) => { return force(currentNodesMechanics) })
             const velocities = velocitiesRaw.reduce((acc, val) => { return acc.map((v, i) => { return { vx: v.vx + val[i].vx, vy: v.vy + val[i].vy } }) })
-            // console.log("There are " + velocities.length + " velocities")
 
+            // filter out velocities of locked nodes
+            const unlockedVelocities = velocities.map((v, i) => { return currentNodesMechanics[i].locked ? { vx: 0, vy: 0 } : v })
+            // sum unlocked velocities
+            const sumUnlockedVelocities = unlockedVelocities.reduce((acc, val) => { return { vx: acc.vx + val.vx, vy: acc.vy + val.vy } })
+            // calculate average unlocked velocity
+            const avgUnlockedVelocity = { vx: sumUnlockedVelocities.vx / unlockedVelocities.length, vy: sumUnlockedVelocities.vy / unlockedVelocities.length }
+            // calculate average unlocked velocity magnitude
 
-            // .reduce((acc, val) => { return acc.map((v, i) => { return { vx: v.vx + val[i].vx, vy: v.vy + val[i].vy } }) })
+            const avgUnlockedVelocityMagnitude = Math.sqrt(avgUnlockedVelocity.vx * avgUnlockedVelocity.vx + avgUnlockedVelocity.vy * avgUnlockedVelocity.vy)
+
+            // calculate maximum unlocked velocity magnitude
+            const maxUnlockedVelocityMagnitude = Math.max(...unlockedVelocities.map((v) => { return Math.sqrt(v.vx * v.vx + v.vy * v.vy) }))
+
+            // stop simulation if average unlocked velocity is below threshold
+            if (maxUnlockedVelocityMagnitude < 0.1 && !dragging) {
+                console.log("simulation stopped");
+                setSimulationRunning(false);
+                return currentNodesMechanics;
+            }
 
             return currentNodesMechanics.map(
                 (node, i) => {
 
                     return {
-                        x: node.locked ? node.fx :(  node.x + ( node.dragging ? 0 : (node.vx + velocities[i].vx) ) ) ,
-                        y: node.locked ? node.fy :(  node.y + ( node.dragging ? 0 : (node.vy + velocities[i].vy) )  ) ,
+                        ...node,
+                        x: node.locked ? node.fx : (node.x + (node.dragging ? 0 : (node.vx + velocities[i].vx))),
+                        y: node.locked ? node.fy : (node.y + (node.dragging ? 0 : (node.vy + velocities[i].vy))),
                         vx: (node.vx + velocities[i].vx) * velocityDecay,
                         vy: (node.vy + velocities[i].vy) * velocityDecay,
-                        fx: node.fx,
-                        fy: node.fy,
-                        index: node.index,
-                        locked: node.locked,
-                        dragging: node.dragging
-                        ,name:node.name
-
-
                     }
                 })
         };
@@ -72,7 +117,6 @@ function GraphSvg({ nodes, edges,velocityDecay, forces ,nodeRadius, width, heigh
             handleStep();
             // console.log("node positions: " + nodesMechanics.map((node) => { return node.x + " " + node.y + " " }))
         }, 10);
-
         return () => my_timer.stop();
     }, []);
 
@@ -82,9 +126,9 @@ function GraphSvg({ nodes, edges,velocityDecay, forces ,nodeRadius, width, heigh
         const newNodesMechanics = nodesMechanics.map((node) => {
             if (node.index === index) {
                 if (node.locked && !forceLock) {
-                    return { x: node.fx, y: node.fy, vx: node.vx, vy: node.vy, fx: null, fy: null, index: node.index, locked: false , dragging: node.dragging,name:node.name}
+                    return { ...node, fx: null, fy: null, locked: false, }
                 } else {
-                    return { x: node.x, y: node.y, vx: node.vx, vy: node.vy, fx: node.x, fy: node.y, index: node.index, locked: true , dragging: node.dragging,name:node.name}
+                    return { ...node, fx: node.x, fy: node.y, locked: true }
                 }
             }
             else {
@@ -96,7 +140,6 @@ function GraphSvg({ nodes, edges,velocityDecay, forces ,nodeRadius, width, heigh
 
     function nodeDragged(index, e) {
         if (!dragging) return;
-        setCurrentDragPosition({ x: e.clientX, y: e.clientY });        
         const currentDragSVG = screenToSVG(e.clientX, e.clientY);
 
         const newNodesMechanics = nodesMechanics.map((node) => {
@@ -105,7 +148,7 @@ function GraphSvg({ nodes, edges,velocityDecay, forces ,nodeRadius, width, heigh
                 const x = dragStartCoords.node.x + (currentDragSVG.x - dragStartCoords.click.x);
                 const y = dragStartCoords.node.y + (currentDragSVG.y - dragStartCoords.click.y);
 
-                return { x: x, y: y, vx: 0, vy: 0, fx: x, fy: y, index: node.index, locked: node.locked , dragging: node.dragging,name:node.name}
+                return { ...node, x: x, y: y, vx: 0, vy: 0, fx: x, fy: y }
             } else {
                 return node;
             }
@@ -121,8 +164,9 @@ function GraphSvg({ nodes, edges,velocityDecay, forces ,nodeRadius, width, heigh
     }
 
     function grab(e) {
-        if(dragging) return;
-        if(e.target.id.startsWith("locker_node_")) {
+        if (dragging) return;
+        setSimulationRunning(true);
+        if (e.target.id.startsWith("locker_node_")) {
             setLockingNodeIndex(parseInt(e.target.id.split("_")[2]));
             return;
         }
@@ -133,13 +177,12 @@ function GraphSvg({ nodes, edges,velocityDecay, forces ,nodeRadius, width, heigh
             setDragging(true);
             const currentDragSVG = screenToSVG(e.clientX, e.clientY);
 
-            setDragStartCoords({ click: { x: currentDragSVG.x, y: currentDragSVG.y }, node: nodesMechanics[nodeIndex] });            
+            setDragStartCoords({ click: { x: currentDragSVG.x, y: currentDragSVG.y }, node: nodesMechanics[nodeIndex] });
 
-            setCurrentDragPosition({ x: e.clientX, y: e.clientY });
 
             setNodesMechanics(nodesMechanics.map((node) => {
                 if (node.index === nodeIndex) {
-                    return { x: node.x, y: node.y, vx: 0, vy: 0, fx: node.x, fy: node.y, index: node.index, locked: node.locked, dragging: true ,name:node.name}
+                    return { ...node, vx: 0, vy: 0, fx: node.x, fy: node.y, dragging: true }
                 } else {
                     return node;
                 }
@@ -148,49 +191,63 @@ function GraphSvg({ nodes, edges,velocityDecay, forces ,nodeRadius, width, heigh
     }
 
     function drag(e) {
-        if(lockingNodeIndex !== -1) {
+        if (lockingNodeIndex !== -1) {
             return;
         }
+        setSimulationRunning(true);
         nodeDragged(draggedNodeIndex, e);
 
     }
 
     function drop(e) {
         console.log("dropped " + e.target.id)
-        if(lockingNodeIndex !== -1) {
-            nodeClicked(lockingNodeIndex,false);
+        if (lockingNodeIndex !== -1) {
+            nodeClicked(lockingNodeIndex, false);
             setLockingNodeIndex(-1);
             return;
         }
-        if(!dragging) return;
+        if (!dragging) return;
+
         setDragging(false);
         setDraggedNodeIndex(-1);
         setNodesMechanics(nodesMechanics.map((node) => {
-            if(node.index === draggedNodeIndex) {
-                return { x: node.x, y: node.y, vx: 0, vy: 0, fx: node.x, fy: node.y, index: node.index, locked: true, dragging: false ,name:node.name}
+            if (node.index === draggedNodeIndex) {
+                return { ...node, locked: true, dragging: false }
             } else {
-                return { x: node.x, y: node.y, vx: 0, vy: 0, fx: node.x, fy: node.y, index: node.index, locked: node.locked, dragging: false ,name:node.name}
+                return { ...node, vx: 0, vy: 0, dragging: false }
             }
         }));
+        setSimulationRunning(true);
 
     }
 
-    const listNodes = nodesMechanics.map((node) =>
-        <GraphNode x={node.x} y={node.y} index={node.index} locked={node.locked} radius={nodeRadius} name={node.name}/>
-    );
+    const nodeBuilder = (node) => {
+        if (node.type == "interface") {
+            return <InterfaceNode x={node.x} y={node.y} index={node.index} locked={node.locked} radius={nodeRadius} name={node.name} />
+        } else if (node.type == "computation-node") {
+            return <ComputationNode x={node.x} y={node.y} index={node.index} locked={node.locked} radius={nodeRadius} name={node.name} />
+        } else if (node.type == "document") {
+            return <DocumentNode x={node.x} y={node.y} index={node.index} locked={node.locked} radius={nodeRadius} name={node.name} />
+        } else {
+            return <GraphNode x={node.x} y={node.y} index={node.index} locked={node.locked} radius={nodeRadius} name={node.name} />
+        }
+    }
 
-    const listEdges = edges.map((edge) => 
-        <GraphEdge x1={nodesMechanics[edge.source].x} y1={nodesMechanics[edge.source].y} x2={nodesMechanics[edge.target].x} y2={nodesMechanics[edge.target].y} />
+    const listNodes = nodesMechanics.map(nodeBuilder);
+
+    const listEdges = edges.map((edge) =>
+        <GraphEdge x1={nodesMechanics[edge.source].x} y1={nodesMechanics[edge.source].y} x2={nodesMechanics[edge.target].x} y2={nodesMechanics[edge.target].y} type={edge.type} name={edge.name} />
     );
 
     const listDisplayNodes = nodesMechanics.map((node) => <li> {node.index} {node.dragging ? "dragging" : ""}</li>);
 
     const viewBoxString = "0 0 " + width + " " + height;
+
     return (
         <div className="GraphSvg">
             <div>
-                <svg ref={svgRootRef} width={width} height={height} viewBox={viewBoxString} onMouseDown={(e) => grab(e)} onMouseMove={(e) => drag(e)} onMouseUp={(e) => drop(e)}>             
-                    <rect id='BackDrop' x='-10%' y='-10%' width='110%' height='110%' fill='none' pointerEvents='all' />
+                <svg ref={svgRootRef} width={width} height={height} viewBox={viewBoxString} onMouseDown={(e) => grab(e)} onMouseMove={(e) => drag(e)} onMouseUp={(e) => drop(e)}>
+                    <rect id='BackDrop' x='-10%' y='-10%' width='110%' height='110%' fill='white' pointerEvents='all' />
                     <line x1="-100" y1="0" x2="5000" y2="0" stroke="white" />
                     <line x1="0" y1="-1000" x2="0" y2="5000" stroke="white" />
                     <line x1={width} y1="-1000" x2={width} y2="5000" stroke="white" />
@@ -202,20 +259,15 @@ function GraphSvg({ nodes, edges,velocityDecay, forces ,nodeRadius, width, heigh
                 </svg>
             </div>
             <div>
-                Dragging: {dragging ? "true" : "false"} dragged node index: {draggedNodeIndex}
-                <p></p>
-                Dragging start: {dragStartCoords.click.x} {dragStartCoords.click.y}
-                <p></p>
-                currentSVGParams: {currentSVGParams.x} {currentSVGParams.y} {currentSVGParams.scale}
-                <p></p>
-                lockingNodeIndex: {lockingNodeIndex}
-                <p></p>
-                
-                currentDragPosition: {currentDragPosition.x} {currentDragPosition.y} delta: {currentDragPosition.x - dragStartCoords.click.x} {currentDragPosition.y - dragStartCoords.click.y}
-                <ul>
-                    {listDisplayNodes}
-                </ul>
+                <button onClick={() => overwriteSvgText()}>OVERWRITE</button>
+                <button onClick={() => saveSvgText()}>Save SVG</button>
+                <button onClick={() => saveLayout()}>Save Layout</button>
+                <button onClick={() => loadLayout()}>Load Layout</button>
             </div>
+            <div width="{width}">
+                <pre className="SVGSource" >{svgText}</pre>
+            </div>
+
 
         </div>
 

@@ -13,7 +13,14 @@ function GraphContainer({width,height,nodeRadius}) {
   const numCols = 5;
   const ref = React.useRef();
   const sizeRef = React.useRef({width: width, height: height});
+  const resizeCounterRef = React.useRef(0);
   const [size, setSize_] = React.useState({width: width, height: height});
+  const [resizeCounter, setResizeCounter_] = React.useState(0);
+
+  function setResizeCounter(newCounter) {
+    resizeCounterRef.current = newCounter;
+    setResizeCounter_(newCounter);
+  }
 
   function setSize(newSize) {
     sizeRef.current = newSize;
@@ -23,7 +30,8 @@ function GraphContainer({width,height,nodeRadius}) {
   useLayoutEffect(() => {
     function updateSize() {
         if(ref.current) {
-            setSize({width: ref.current.offsetWidth, height: ref.current.offsetWidth*0.7 });
+            setSize({width: ref.current.offsetWidth, height: window.innerHeight- 200 });
+            setResizeCounter(resizeCounterRef.current + 1);
         }
     } 
     window.addEventListener('resize', updateSize);
@@ -70,9 +78,10 @@ function GraphContainer({width,height,nodeRadius}) {
 
 
   return (
-    <div ref={ref} className="graph-container">
-        <GraphSvg width={size.width} height={size.height} nodes={listNodes} edges={listEdges} velocityDecay="0.6" forces={forces} nodeRadius={nodeRadius}></GraphSvg>
-    </div>
+    <div ref={ref} className="graph-container">      
+        <GraphSvg width={size.width} height={size.height} nodes={listNodes} edges={listEdges} velocityDecay="0.6" forces={forces} nodeRadius={nodeRadius} resizeCounter={resizeCounter}></GraphSvg>
+        <p>{resizeCounter}</p>    
+        </div>
   );
 }
 

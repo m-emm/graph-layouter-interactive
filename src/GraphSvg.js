@@ -9,7 +9,7 @@ import xmlFormat from 'xml-formatter';
 import DocumentNode from './DocumentNode';
 
 
-function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, height }) {
+function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, height ,resizeCounter}) {
 
     const svgRootRef = useRef(null);
     
@@ -22,6 +22,9 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
     const [svgText, setSvgText] = useState("");
     const [simulationRunning, setSimulationRunning_] = useState(true);
 
+
+    const currentResizeCounterRef = useRef(resizeCounter);
+    const oldResizeCounterRef = useRef(resizeCounter);
 
     const simulationRunningRef = useRef(simulationRunning);
 
@@ -79,6 +82,10 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
 
 
     function handleStep() {
+        if(oldResizeCounterRef.current !== currentResizeCounterRef.current) {
+            setSimulationRunning(true);
+        }
+        oldResizeCounterRef.current = currentResizeCounterRef.current;
 
         const newNodesMechanics = function (currentNodesMechanics) {
             if(!simulationRunningRef.current) return currentNodesMechanics;
@@ -255,6 +262,7 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
 
     const viewBoxString = "0 0 " + width + " " + height;
 
+    currentResizeCounterRef.current = resizeCounter;
     return (
         <div className="GraphSvg">
             <div>
@@ -271,6 +279,7 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
                 </svg>
             </div>
             <div>
+                <p> Window height: {window.innerHeight} Simulation {simulationRunning ? "running" : "stopped"}</p>
                 <button onClick={() => overwriteSvgText()}>OVERWRITE</button>
                 <button onClick={() => saveSvgText()}>Save SVG</button>
                 <button onClick={() => saveLayout()}>Save Layout</button>

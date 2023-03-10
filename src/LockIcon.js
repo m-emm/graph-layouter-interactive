@@ -11,10 +11,10 @@ function LockIcon({x,y,radius,id}) {
 
     
     return(
-        <g transform={transform}>
-            <rect id={id} class="lock-rect" x="0" y="0" width={size} height={size} fill="white" stroke="none"/>
-            <rect class="lock-path" stroke="black" strokeWidth="4" fill="white" id={id} x={inset} y={size-inset-lockHeight} width={lockWidth} height={lockHeight} />
-            <path class="lock-path" stroke="black" strokeWidth="4" fill="none" d={handlePath} />
+        <g transform={transform} className="lock-icon">
+            <rect id={id} className="lock-rect" x="0" y="0" width={size} height={size} fill="white" stroke="none"/>
+            <rect className="lock-path" stroke="black" strokeWidth="4" fill="white" id={id} x={inset} y={size-inset-lockHeight} width={lockWidth} height={lockHeight} />
+            <path className="lock-path" stroke="black" strokeWidth="4" fill="none" d={handlePath} />
         </g>
     )
 }

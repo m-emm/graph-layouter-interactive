@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import GraphNode from './GraphNode';
 import { timer, interval } from 'd3-timer';
-import './GraphSvg.css';
 import GraphEdge from './GraphEdge';
 import InterfaceNode from './InterfaceNode';
 import ComputationNode from './ComputationNode';
 import xmlFormat from 'xml-formatter';
 import DocumentNode from './DocumentNode';
+import GraphSvg_css from './GraphSvg_css.js';
 
 
-function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, height ,resizeCounter}) {
+function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, height, resizeCounter }) {
 
     const svgRootRef = useRef(null);
-    
+
 
     const [nodesMechanics, setNodesMechanics] = useState(nodes.map((node, i) => { return { x: node.x, y: node.y, vx: 0, vy: 0, fx: 0, fy: 0, index: i, locked: false, name: node.name, type: node.type } }))
     const [dragging, setDragging] = useState(false);
@@ -52,7 +52,15 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
     function saveSvgText() {
         const svg = svgRootRef.current;
         if (svg) {
-            const xmlText = xmlFormat(svg.outerHTML);
+
+            var svgCopy = new DOMParser().parseFromString(svg.outerHTML, "text/xml");
+            const lockIcons = svgCopy.firstChild.getElementsByClassName("lock-icon");
+            // convert lockIcons from HTMLCollection to Array
+            const lockIconsArray = Array.prototype.slice.call(lockIcons);
+            lockIconsArray.forEach((lockIcon) => {
+                lockIcon.parentNode.removeChild(lockIcon);
+            })        
+            const xmlText = '<?xml version="1.0"?>\n' + xmlFormat(svgCopy.firstChild.outerHTML);
             setSvgText(xmlText);
         }
     }
@@ -82,13 +90,13 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
 
 
     function handleStep() {
-        if(oldResizeCounterRef.current !== currentResizeCounterRef.current) {
+        if (oldResizeCounterRef.current !== currentResizeCounterRef.current) {
             setSimulationRunning(true);
         }
         oldResizeCounterRef.current = currentResizeCounterRef.current;
 
         const newNodesMechanics = function (currentNodesMechanics) {
-            if(!simulationRunningRef.current) return currentNodesMechanics;
+            if (!simulationRunningRef.current) return currentNodesMechanics;
             const velocitiesRaw = forces().map((force) => { return force(currentNodesMechanics) })
             const velocities = velocitiesRaw.reduce((acc, val) => { return acc.map((v, i) => { return { vx: v.vx + val[i].vx, vy: v.vy + val[i].vy } }) })
 
@@ -110,7 +118,7 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
                 if (simulationRunningRef.current) {
                     console.log("simulation stopped");
                     setSimulationRunning(false);
-                }                
+                }
                 return currentNodesMechanics;
             }
 
@@ -208,7 +216,7 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
     }
 
     function drag(e) {
-        if(!dragging) return;
+        if (!dragging) return;
         if (lockingNodeIndex !== -1) {
             return;
         }
@@ -266,7 +274,8 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
     return (
         <div className="GraphSvg">
             <div>
-                <svg ref={svgRootRef} width={width} height={height} viewBox={viewBoxString} onMouseDown={(e) => grab(e)} onMouseMove={(e) => drag(e)} onMouseUp={(e) => drop(e)}>
+                <svg xmlns="http://www.w3.org/2000/svg" ref={svgRootRef} width={width} height={height} viewBox={viewBoxString} onMouseDown={(e) => grab(e)} onMouseMove={(e) => drag(e)} onMouseUp={(e) => drop(e)}>
+                    <style>{GraphSvg_css()}</style>
                     <rect id='BackDrop' x='-10%' y='-10%' width='110%' height='110%' fill='white' pointerEvents='all' />
                     <line x1="-100" y1="0" x2="5000" y2="0" stroke="white" />
                     <line x1="0" y1="-1000" x2="0" y2="5000" stroke="white" />

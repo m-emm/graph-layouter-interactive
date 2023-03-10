@@ -1,5 +1,5 @@
 
-function GraphSvg_css() {
+function GraphSvg_css(nodeNameFontSize,edgeNameFontSize,nodeIdFontSize) {
     
     return `
     svg text {
@@ -20,13 +20,13 @@ function GraphSvg_css() {
     }
 
     .node-name {
-        font-size: 16px;
+        font-size: ${nodeNameFontSize}px;
         font-weight: regular;
         fill: #000;
     }
 
     .edge-name {
-        font-size: 12px;
+        font-size: ${edgeNameFontSize}px;
         font-weight: regular;
         fill: #000;
     }

@@ -23,6 +23,8 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
     const [svgText, setSvgText] = useState("");
     const [simulationRunning, setSimulationRunning_] = useState(true);
     const [snapToGrid, setSnapToGrid] = React.useState(false);
+    const [nodeNameFontSize, setNodeNameFontSize] = useState(16);
+    const [edgeNameFontSize, setEdgeNameFontSize] = useState(16);
 
     const currentResizeCounterRef = useRef(resizeCounter);
     const oldResizeCounterRef = useRef(resizeCounter);
@@ -66,10 +68,13 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
         }
     }
 
-    function overwriteSvgText() {
-        setSvgText("Hallodri");
+    function unlockAll() {
+        const newNodesMechanics = nodesMechanics.map((node) => {
+            return { ...node, locked: false }
+        })
+        setNodesMechanics(newNodesMechanics);
+        setSimulationRunning(true);
     }
-
     function saveLayout() {
         localStorage.setItem("layout", JSON.stringify(nodesMechanics.map((node) => { return { x: node.x, y: node.y, name: node.name, fx: node.fx, fy: node.fy, locked: node.locked } })));
     }
@@ -289,7 +294,7 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
         <div className="GraphSvg">
             <div>
                 <svg xmlns="http://www.w3.org/2000/svg" ref={svgRootRef} width={width} height={height} viewBox={viewBoxString} onMouseDown={(e) => grab(e)} onMouseMove={(e) => drag(e)} onMouseUp={(e) => drop(e)}>
-                    <style>{GraphSvg_css()}</style>
+                    <style>{GraphSvg_css(nodeNameFontSize,edgeNameFontSize)}</style>
                     <rect id='BackDrop' x='-10%' y='-10%' width='110%' height='110%' fill='white' pointerEvents='all' />
                     <line x1="-100" y1="0" x2="5000" y2="0" stroke="white" />
                     <line x1="0" y1="-1000" x2="0" y2="5000" stroke="white" />
@@ -308,6 +313,17 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
                 <button onClick={() => saveSvgText()}>Save SVG</button>
                 <button onClick={() => saveLayout()}>Save Layout</button>
                 <button onClick={() => loadLayout()}>Load Layout</button>
+                <button onClick={() => unlockAll()}>Unlock all</button>
+                <p>
+                <label>
+                 Node Font Size<input name="nodeFontSizeInput" onChange={e => setNodeNameFontSize(e.target.value) } defaultValue="16" />
+                </label>
+                </p>
+                <p>
+                <label>
+                 Edge Font Size<input name="edgeNameFontSize" onChange={e => setEdgeNameFontSize(e.target.value) } defaultValue="16" />
+                </label>
+                </p>
             </div>
             <div width="{width}">
                 <pre className="SVGSource" >{svgText}</pre>

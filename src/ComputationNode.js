@@ -14,7 +14,7 @@ function ComputationNode({ x, y, index, name, locked, radius }) {
         const x2 = x1 + shift ;
         const y2 = y1 - shift ;
         if (i == 2 || i == 3 || i == 0) {
-            return <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="black" strokeWidth="1" />
+            return <line key={"line"+i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="black" strokeWidth="1" />
         }
     }).filter((l) => l != null);
 

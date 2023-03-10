@@ -7,9 +7,10 @@ import ComputationNode from './ComputationNode';
 import xmlFormat from 'xml-formatter';
 import DocumentNode from './DocumentNode';
 import GraphSvg_css from './GraphSvg_css.js';
+import Checkbox from './Checkbox';
 
 
-function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, height, resizeCounter }) {
+function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, height, resizeCounter,gridX,gridY }) {
 
     const svgRootRef = useRef(null);
 
@@ -21,7 +22,7 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
     const [lockingNodeIndex, setLockingNodeIndex] = useState(-1);
     const [svgText, setSvgText] = useState("");
     const [simulationRunning, setSimulationRunning_] = useState(true);
-
+    const [snapToGrid, setSnapToGrid] = React.useState(false);
 
     const currentResizeCounterRef = useRef(resizeCounter);
     const oldResizeCounterRef = useRef(resizeCounter);
@@ -73,6 +74,14 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
         localStorage.setItem("layout", JSON.stringify(nodesMechanics.map((node) => { return { x: node.x, y: node.y, name: node.name, fx: node.fx, fy: node.fy, locked: node.locked } })));
     }
 
+    function doSnapToGrid() {
+        const newNodesMechanics = nodesMechanics.map((node) => {
+            return { ...node, x: Math.round(node.x / gridX) * gridX, y: Math.round(node.y / gridY) * gridY, fx: Math.round(node.x / gridX) * gridX, fy: Math.round(node.y / gridY) * gridY , locked: true}
+        })
+        setNodesMechanics(newNodesMechanics);
+        setSimulationRunning(true);
+    }
+
     function loadLayout() {
         const layout = JSON.parse(localStorage.getItem("layout"));
         if (layout) {
@@ -85,6 +94,7 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
                 }
             })
             setNodesMechanics(newNodesMechanics);
+            setSimulationRunning(true);
         }
     }
 
@@ -170,8 +180,12 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
         const newNodesMechanics = nodesMechanics.map((node) => {
             if (node.index === index) {
                 console.log("Node " + index + " found")
-                const x = dragStartCoords.node.x + (currentDragSVG.x - dragStartCoords.click.x);
-                const y = dragStartCoords.node.y + (currentDragSVG.y - dragStartCoords.click.y);
+                let x = dragStartCoords.node.x + (currentDragSVG.x - dragStartCoords.click.x);
+                let y = dragStartCoords.node.y + (currentDragSVG.y - dragStartCoords.click.y);
+                if(snapToGrid) {
+                    x = Math.round(x / gridX) * gridX;
+                    y = Math.round(y / gridY) * gridY;
+                }
 
                 return { ...node, x: x, y: y, vx: 0, vy: 0, fx: x, fy: y }
             } else {
@@ -248,22 +262,22 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
 
     }
 
-    const nodeBuilder = (node) => {
+    const nodeBuilder = (node,i) => {
         if (node.type == "interface") {
-            return <InterfaceNode x={node.x} y={node.y} index={node.index} locked={node.locked} radius={nodeRadius} name={node.name} />
+            return <InterfaceNode key={"node_"+i} x={node.x} y={node.y} index={node.index} locked={node.locked} radius={nodeRadius} name={node.name} />
         } else if (node.type == "computation-node") {
-            return <ComputationNode x={node.x} y={node.y} index={node.index} locked={node.locked} radius={nodeRadius} name={node.name} />
+            return <ComputationNode key={"node_"+i} x={node.x} y={node.y} index={node.index} locked={node.locked} radius={nodeRadius} name={node.name} />
         } else if (node.type == "document") {
-            return <DocumentNode x={node.x} y={node.y} index={node.index} locked={node.locked} radius={nodeRadius} name={node.name} />
+            return <DocumentNode key={"node_"+i}  x={node.x} y={node.y} index={node.index} locked={node.locked} radius={nodeRadius} name={node.name} />
         } else {
-            return <GraphNode x={node.x} y={node.y} index={node.index} locked={node.locked} radius={nodeRadius} name={node.name} />
+            return <GraphNode key={"node_"+i} x={node.x} y={node.y} index={node.index} locked={node.locked} radius={nodeRadius} name={node.name} />
         }
     }
 
     const listNodes = nodesMechanics.map(nodeBuilder);
 
-    const listEdges = edges.map((edge) =>
-        <GraphEdge x1={nodesMechanics[edge.source].x} y1={nodesMechanics[edge.source].y} x2={nodesMechanics[edge.target].x} y2={nodesMechanics[edge.target].y} type={edge.type} name={edge.name} />
+    const listEdges = edges.map((edge,i) =>
+        <GraphEdge key={"edge"+i} x1={nodesMechanics[edge.source].x} y1={nodesMechanics[edge.source].y} x2={nodesMechanics[edge.target].x} y2={nodesMechanics[edge.target].y} type={edge.type} name={edge.name} />
     );
 
     const listDisplayNodes = nodesMechanics.map((node) => <li> {node.index} {node.dragging ? "dragging" : ""}</li>);
@@ -289,7 +303,8 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
             </div>
             <div>
                 <p> Window height: {window.innerHeight} Simulation {simulationRunning ? "running" : "stopped"}</p>
-                <button onClick={() => overwriteSvgText()}>OVERWRITE</button>
+                <Checkbox label="Snap to Grid" checked={snapToGrid} onCheckboxChange={(e) => setSnapToGrid(e.target.checked)} />
+                <button onClick={() => doSnapToGrid()}>Snap to Grid </button>
                 <button onClick={() => saveSvgText()}>Save SVG</button>
                 <button onClick={() => saveLayout()}>Save Layout</button>
                 <button onClick={() => loadLayout()}>Load Layout</button>

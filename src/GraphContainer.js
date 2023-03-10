@@ -6,6 +6,7 @@ import { borderForce } from './BorderForce.js';
 import { linkForce } from './LinkForce';
 import architecture from './architecture'; 
 import { collisionForce } from './CollisionForce';
+import { gridForce } from './GridForce';
 
 
 function GraphContainer({width,height,nodeRadius}) {
@@ -79,7 +80,7 @@ function GraphContainer({width,height,nodeRadius}) {
 
   return (
     <div ref={ref} className="graph-container">      
-        <GraphSvg width={size.width} height={size.height} nodes={listNodes} edges={listEdges} velocityDecay="0.6" forces={forces} nodeRadius={nodeRadius} resizeCounter={resizeCounter}></GraphSvg>
+        <GraphSvg width={size.width} height={size.height} nodes={listNodes} edges={listEdges} velocityDecay="0.6" forces={forces} nodeRadius={nodeRadius} resizeCounter={resizeCounter} gridX={0.5*nodeRadius} gridY ={0.5*nodeRadius} ></GraphSvg>
         <p>{resizeCounter}</p>    
         </div>
   );

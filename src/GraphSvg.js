@@ -285,6 +285,16 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
         <GraphEdge key={"edge"+i} x1={nodesMechanics[edge.source].x} y1={nodesMechanics[edge.source].y} x2={nodesMechanics[edge.target].x} y2={nodesMechanics[edge.target].y} type={edge.type} name={edge.name} />
     );
 
+    const intersectingPoints = edges.map((edge,i) => {
+        const source = listNodes[edge.source];
+        const target = listNodes[edge.target];
+        const line = {x1: source.x, y1: source.y, x2: target.x, y2: target.y};
+        if(target.getIntersectingPoints) {
+            return target.getIntersectingPoints(line);
+        }
+        return []
+    });
+
     const listDisplayNodes = nodesMechanics.map((node) => <li> {node.index} {node.dragging ? "dragging" : ""}</li>);
 
     const viewBoxString = "0 0 " + width + " " + height;
@@ -324,9 +334,9 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
                  Edge Font Size<input name="edgeNameFontSize" onChange={e => setEdgeNameFontSize(e.target.value) } defaultValue="16" />
                 </label>
                 </p>
-            </div>
-            <div width="{width}">
-                <pre className="SVGSource" >{svgText}</pre>
+                <p>
+                <a href-lang="image/svg+xml" href={"data:image/svg+xml;base64,\n"+btoa(svgText)} id="download" target="_blank">Download</a>
+                </p>
             </div>
 
 

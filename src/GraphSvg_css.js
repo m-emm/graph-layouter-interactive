@@ -47,6 +47,12 @@ function GraphSvg_css(nodeNameFontSize,edgeNameFontSize,nodeIdFontSize) {
     .dashed {
         stroke-dasharray: 5, 5;
     }
+
+    .document-path {
+        stroke: black;
+        stroke-width: 1.5px;
+        fill: none;
+    }
     `
 }
 

@@ -40,6 +40,7 @@
     "d3-quadtree": "^3.0.1",
     "d3-timer": "^3.0.1",
     "js-yaml": "3.13.1",
+    "ramda": "^0.28.0",
     "xml-formatter": "^3.3.1"
   }
 }

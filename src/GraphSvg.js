@@ -6,8 +6,12 @@ import InterfaceNode from './InterfaceNode';
 import ComputationNode from './ComputationNode';
 import xmlFormat from 'xml-formatter';
 import DocumentNode from './DocumentNode';
+import ShapeNode from './ShapeNode';
 import GraphSvg_css from './GraphSvg_css.js';
 import Checkbox from './Checkbox';
+import IntersectionMark from './IntersectionMark';
+import { nodeShapeFromName } from './nodeShapes';
+import {transformPoints,transformationMatrixSkew,transformPointsWithMatrix,getIntersectingPoints}  from './geometry';
 
 
 function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, height, resizeCounter,gridX,gridY }) {
@@ -273,13 +277,34 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
         } else if (node.type == "computation-node") {
             return <ComputationNode key={"node_"+i} x={node.x} y={node.y} index={node.index} locked={node.locked} radius={nodeRadius} name={node.name} />
         } else if (node.type == "document") {
-            return <DocumentNode key={"node_"+i}  x={node.x} y={node.y} index={node.index} locked={node.locked} radius={nodeRadius} name={node.name} />
+            // return <DocumentNode key={"node_"+i}  x={node.x} y={node.y} index={node.index} locked={node.locked} radius={nodeRadius} name={node.name} />
+            const shape = transformPointsWithMatrix(nodeShapeFromName(node.type), transformationMatrixSkew(node.x,node.y,nodeRadius*4,nodeRadius,0) );
+            return <ShapeNode key={"node_"+i}  x={node.x} y={node.y} index={node.index} locked={node.locked} size={1} name={node.name}  shape={shape}/>
         } else {
             return <GraphNode key={"node_"+i} x={node.x} y={node.y} index={node.index} locked={node.locked} radius={nodeRadius} name={node.name} />
         }
     }
 
     const listNodes = nodesMechanics.map(nodeBuilder);
+    const documentEdges = edges.filter(edge => nodesMechanics[edge.source].type === "document" || nodesMechanics[edge.target].type === "document");
+    const intersectionMarksOnDocuments = documentEdges.map((edge,i) => {
+        const source = nodesMechanics[edge.source];
+        const target = nodesMechanics[edge.target];
+        const line = {x1: source.x, y1: source.y, x2: target.x, y2: target.y};
+        const intersectionMarks = [];
+        [source,target].forEach((node) => {
+        if(node.type === "document") {
+            const shape = transformPointsWithMatrix(nodeShapeFromName(node.type), transformationMatrixSkew(node.x,node.y,nodeRadius*4,nodeRadius,0) );
+            const intersectingPoints = getIntersectingPoints(line,shape);
+            intersectionMarks.push(intersectingPoints.map((point,i) => <IntersectionMark key={"intersection_"+i} x={point.x} y={point.y} />));
+        }
+        });
+        return intersectionMarks;
+    });
+
+            
+
+
 
     const listEdges = edges.map((edge,i) =>
         <GraphEdge key={"edge"+i} x1={nodesMechanics[edge.source].x} y1={nodesMechanics[edge.source].y} x2={nodesMechanics[edge.target].x} y2={nodesMechanics[edge.target].y} type={edge.type} name={edge.name} />
@@ -313,6 +338,8 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
                     {listEdges}
 
                     {listNodes}
+                    
+                    {intersectionMarksOnDocuments}
 
                 </svg>
             </div>

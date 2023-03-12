@@ -31,8 +31,6 @@ function GraphSvg_css(nodeNameFontSize,edgeNameFontSize,nodeIdFontSize) {
         fill: #000;
     }
 
-
-
     .node-circle {
         stroke: #000;
         stroke-width: 0.1px;
@@ -41,7 +39,7 @@ function GraphSvg_css(nodeNameFontSize,edgeNameFontSize,nodeIdFontSize) {
 
     .graph-edge {
         stroke: black;
-        stroke-width: 1.5px;
+        stroke-width: 2px;
     }
 
     .dashed {
@@ -50,8 +48,8 @@ function GraphSvg_css(nodeNameFontSize,edgeNameFontSize,nodeIdFontSize) {
 
     .document-path {
         stroke: black;
-        stroke-width: 1.5px;
-        fill: none;
+        stroke-width: 0.1px;
+        fill: lightyellow;
     }
     `
 }

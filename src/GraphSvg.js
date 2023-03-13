@@ -10,13 +10,13 @@ import ShapeNode from './ShapeNode';
 import GraphSvg_css from './GraphSvg_css.js';
 import Checkbox from './Checkbox';
 import IntersectionMark from './IntersectionMark';
-import { nodeShapeFromName , arrowHead} from './nodeShapes';
-import { transformPoints, transformationMatrix, transformPointsWithMatrix, getIntersectingPoints } from './geometry';
+import { nodeShapeFromName, arrowHead } from './nodeShapes';
+import { transformPoints, transformationMatrix, transformPointsWithMatrix, getIntersectingPoints, boundingBox } from './geometry';
 import * as R from "ramda";
 import Polygon from './Polygon';
 
 
-function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, height, resizeCounter, gridX, gridY, boxAspecRatio }) {
+function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, height, resizeCounter, gridX, gridY, boxAspectRatio: boxAspectRatioProp }) {
 
     const svgRootRef = useRef(null);
 
@@ -29,8 +29,9 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
     const [svgText, setSvgText] = useState("");
     const [simulationRunning, setSimulationRunning_] = useState(true);
     const [snapToGrid, setSnapToGrid] = React.useState(false);
-    const [nodeNameFontSize, setNodeNameFontSize] = useState(16);
+    const [nodeNameFontSize, setNodeNameFontSize] = useState(21);
     const [edgeNameFontSize, setEdgeNameFontSize] = useState(16);
+    const [boxAspectRatio, setBoxAspectRatio] = useState(boxAspectRatioProp);
 
     const currentResizeCounterRef = useRef(resizeCounter);
     const oldResizeCounterRef = useRef(resizeCounter);
@@ -62,7 +63,14 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
         const svg = svgRootRef.current;
         if (svg) {
 
+            const svgBoundingBox = boundingBox(nodesMechanics);
+
+
             var svgCopy = new DOMParser().parseFromString(svg.outerHTML, "text/xml");
+            const border = 5 * nodeRadius;
+            svgCopy.firstChild.setAttribute("width", svgBoundingBox.width + border);
+            svgCopy.firstChild.setAttribute("height", svgBoundingBox.height + border);
+            svgCopy.firstChild.setAttribute("viewBox", `${svgBoundingBox.x - border} ${svgBoundingBox.y - border} ${svgBoundingBox.width + 2 * border} ${svgBoundingBox.height + 2 * border}`);
             const lockIcons = svgCopy.firstChild.getElementsByClassName("lock-icon");
             // convert lockIcons from HTMLCollection to Array
             const lockIconsArray = Array.prototype.slice.call(lockIcons);
@@ -273,10 +281,10 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
     }
 
     const calcNodeShape = (node) => {
-        return transformPointsWithMatrix(nodeShapeFromName(node.type, boxAspecRatio), transformationMatrix(node.x, node.y, nodeRadius * boxAspecRatio));
+        return transformPointsWithMatrix(nodeShapeFromName(node.type, boxAspectRatio), transformationMatrix(node.x, node.y, nodeRadius * boxAspectRatio));
     }
 
-    const applicableNodeType =  (type) => { return R.includes(R.__,["document","computation-node","component","interface"])(type) || !type; } 
+    const applicableNodeType = (type) => { return R.includes(R.__, ["document", "computation-node", "component", "interface"])(type) || !type; }
 
     const nodeBuilder = (node, i) => {
         if (node.type == "interface" && false) {
@@ -287,9 +295,9 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
             const shape = calcNodeShape(node);
             // return <DocumentNode key={"node_"+i}  x={node.x} y={node.y} index={node.index} locked={node.locked} radius={nodeRadius} name={node.name} />
             // const shape = transformPointsWithMatrix(nodeShapeFromName(node.type,boxAspecRatio), transformationMatrixSkew(node.x,node.y,nodeRadius*boxAspecRatio,nodeRadius*boxAspecRatio,0) );
-            return <ShapeNode key={"node_" + i} x={node.x} y={node.y} index={node.index} locked={node.locked} size={1} name={node.name} shape={shape} textYOffset={ node.type == "interface" ? nodeRadius*0.8 : 0 } />
+            return <ShapeNode key={"node_" + i} x={node.x} y={node.y} index={node.index} locked={node.locked} size={1} name={node.name} shape={shape} textYOffset={node.type == "interface" ? nodeRadius * 1.3 : 0} />
         } else {
-            return <GraphNode key={"node_" + i} x={node.x} y={node.y} index={node.index} locked={node.locked} height={nodeRadius} width={nodeRadius * boxAspecRatio} name={node.name} />
+            return <GraphNode key={"node_" + i} x={node.x} y={node.y} index={node.index} locked={node.locked} height={nodeRadius} width={nodeRadius * boxAspectRatio} name={node.name} />
         }
     }
 
@@ -301,14 +309,14 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
         const line = { x1: source.x, y1: source.y, x2: target.x, y2: target.y };
         const intersectionMarks = [];
         [source, target].forEach((node) => {
-            if (applicableNodeType(node.type) && edge.name =="use") {
+            if (applicableNodeType(node.type) && edge.name == "use" || edge.name == "implements") {
                 const shape = calcNodeShape(node);
                 //            const shape = transformPointsWithMatrix(nodeShapeFromName(node.type), transformationMatrixSkew(node.x,node.y,nodeRadius*4,nodeRadius*4,0) );
                 const intersectingPoints = getIntersectingPoints(line, shape);
                 // intersectionMarks.push(intersectingPoints.map((point, i) => <IntersectionMark key={"intersection_" + i} x={point.x} y={point.y} />));
-                if(node.index == target.index) {
-                    const arrowHeadShape = (postion) =>  arrowHead(line,postion,nodeRadius * 0.3);
-                    intersectionMarks.push(intersectingPoints.map((point, i) => <Polygon x={0} y={0} className="arrow-head" key={"arrowhead_" + i} id={"arrowhead_" + edge.source + "_ " + edge.target + "_" + node.index} vertices={arrowHeadShape(point)} />));
+                if (node.index == target.index) {
+                    const arrowHeadShape = (postion) => arrowHead(line, postion, nodeRadius * 0.3);
+                    intersectionMarks.push(intersectingPoints.map((point, i) => <Polygon x={0} y={0} className={"arrow-head-" + edge.name} key={"arrowhead_" + i} id={"arrowhead_" + edge.source + "_ " + edge.target + "_" + node.index} vertices={arrowHeadShape(point)} />));
                 }
             }
         });
@@ -365,14 +373,20 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
                 <button onClick={() => unlockAll()}>Unlock all</button>
                 <p>
                     <label>
-                        Node Font Size<input name="nodeFontSizeInput" onChange={e => setNodeNameFontSize(e.target.value)} defaultValue="16" />
+                        Node Font Size<input name="nodeFontSizeInput" onChange={e => setNodeNameFontSize(e.target.value)} value={nodeNameFontSize} />
                     </label>
                 </p>
                 <p>
                     <label>
-                        Edge Font Size<input name="edgeNameFontSize" onChange={e => setEdgeNameFontSize(e.target.value)} defaultValue="16" />
+                        Edge Font Size<input name="edgeNameFontSize" onChange={e => setEdgeNameFontSize(e.target.value)} value={edgeNameFontSize} />
                     </label>
                 </p>
+                <p>
+                    <label>
+                        Box aspect ratio<input name="boxAspectRatio" onChange={e => setBoxAspectRatio(e.target.value)} value={boxAspectRatio} />
+                    </label>
+                </p>
+
                 <p>
                     <a href-lang="image/svg+xml" href={"data:image/svg+xml;base64,\n" + btoa(svgText)} id="download" target="_blank">Download</a>
                 </p>

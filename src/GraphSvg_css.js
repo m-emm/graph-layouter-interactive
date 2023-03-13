@@ -52,6 +52,16 @@ function GraphSvg_css(nodeNameFontSize, edgeNameFontSize, nodeIdFontSize) {
         stroke-width: 0.6px;
         fill: lightyellow;
     }
+
+    .arrow-head-use {
+        fill: black;
+    }
+    .arrow-head-implements {
+        fill: white;
+        stroke: black;
+        stroke-width: 2px;
+    }
+
     `
 }
 

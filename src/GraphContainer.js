@@ -10,6 +10,7 @@ import { gridForce } from './GridForce';
 
 
 function GraphContainer({width,height,nodeRadius}) {
+  const boxAspecRatio  =  4.0;
   const centerForceStrength = 1.0
   const numCols = 5;
   const ref = React.useRef();
@@ -80,7 +81,7 @@ function GraphContainer({width,height,nodeRadius}) {
 
   return (
     <div ref={ref} className="graph-container">      
-        <GraphSvg width={size.width} height={size.height} nodes={listNodes} edges={listEdges} velocityDecay="0.6" forces={forces} nodeRadius={nodeRadius} resizeCounter={resizeCounter} gridX={0.5*nodeRadius} gridY ={0.5*nodeRadius} ></GraphSvg>
+        <GraphSvg width={size.width} height={size.height} nodes={listNodes} edges={listEdges} velocityDecay="0.6" forces={forces} nodeRadius={nodeRadius} resizeCounter={resizeCounter} gridX={0.5*nodeRadius} gridY ={0.5*nodeRadius} boxAspecRatio={boxAspecRatio}></GraphSvg>
         <p>{resizeCounter}</p>    
         </div>
   );

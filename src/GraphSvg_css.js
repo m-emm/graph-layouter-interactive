@@ -1,12 +1,13 @@
 
-function GraphSvg_css(nodeNameFontSize,edgeNameFontSize,nodeIdFontSize) {
-    
+function GraphSvg_css(nodeNameFontSize, edgeNameFontSize, nodeIdFontSize) {
+
     return `
     svg text {
         -webkit-user-select: none;
         -moz-user-select: none;
             -ms-user-select: none;
                 user-select: none;
+        font-family: sans-serif;
     }
     svg text::selection {
         background: none;
@@ -46,9 +47,9 @@ function GraphSvg_css(nodeNameFontSize,edgeNameFontSize,nodeIdFontSize) {
         stroke-dasharray: 5, 5;
     }
 
-    .document-path {
+    .node-border {
         stroke: black;
-        stroke-width: 0.1px;
+        stroke-width: 0.6px;
         fill: lightyellow;
     }
     `

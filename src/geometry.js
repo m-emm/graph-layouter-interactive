@@ -110,30 +110,24 @@ const getIntersectingPoints = (line, vertices) => {
 
 };
 
+const boundingBox = (points) => {
+  const x = R.map((point) => point.x, points);
+  const y = R.map((point) => point.y, points);
+  return {
+    x: Math.min(...x),
+    y: Math.min(...y),
+    width: Math.max(...x) - Math.min(...x),
+    height: Math.max(...y) - Math.min(...y),
+  };
+};
+
 const centerAndScalePoints = (points) => {
-  // calculate center of vertices
-  const center = R.reduce(
-    (acc, vertex) => {
-      acc.x += vertex.x / points.length;
-      acc.y += vertex.y / points.length;
-      return acc;
-    },
-    { x: 0, y: 0 },
-    points
-  );
-
-  const size = R.reduce(
-    (acc, vertex) => {
-      const dx = vertex.x - center.x;
-      const dy = vertex.y - center.y;
-      const d = Math.sqrt(dx * dx + dy * dy);
-      if (d > acc) acc = d;
-      return acc;
-    },
-    0,
-    points
-  );
-
+  const boundingBoxOfPoints = boundingBox(points);
+  const size = R.max(boundingBoxOfPoints.width, boundingBoxOfPoints.height);
+  const center = {
+    x: boundingBoxOfPoints.x + boundingBoxOfPoints.width / 2,
+    y: boundingBoxOfPoints.y + boundingBoxOfPoints.height / 2,
+  };
   const scale = 1 / size;
   // center and scale vertices
   return R.map((vertex) => {
@@ -152,5 +146,6 @@ export {
   transformPoints,
   invertTransformationMatrix,
   asSvgMatrix,
+  boundingBox
 };
 export { getLineIntersection, getIntersectingPoints, isPointInPolygon, centerAndScalePoints };

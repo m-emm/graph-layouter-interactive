@@ -2,7 +2,7 @@
 
 This is a tool to create visualizations of graphs. It aims at making it easier to create diagrams documenting software designs. It is inspired by PlantUML and d3-force layout.
 
-# How to use
+## How to use
 - Edit [architecture.js](src/architecture.js) and document the graph you want to visualise by changing the yaml text in there
 - use `npm start` to start the application
 - use the mouse to drag the nodes to where you want them

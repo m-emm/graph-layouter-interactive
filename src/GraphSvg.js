@@ -278,7 +278,7 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
             return <ComputationNode key={"node_"+i} x={node.x} y={node.y} index={node.index} locked={node.locked} radius={nodeRadius} name={node.name} />
         } else if (node.type == "document") {
             // return <DocumentNode key={"node_"+i}  x={node.x} y={node.y} index={node.index} locked={node.locked} radius={nodeRadius} name={node.name} />
-            const shape = transformPointsWithMatrix(nodeShapeFromName(node.type), transformationMatrixSkew(node.x,node.y,nodeRadius*4,nodeRadius,0) );
+            const shape = transformPointsWithMatrix(nodeShapeFromName(node.type), transformationMatrixSkew(node.x,node.y,nodeRadius*4,nodeRadius*4,0) );
             return <ShapeNode key={"node_"+i}  x={node.x} y={node.y} index={node.index} locked={node.locked} size={1} name={node.name}  shape={shape}/>
         } else {
             return <GraphNode key={"node_"+i} x={node.x} y={node.y} index={node.index} locked={node.locked} radius={nodeRadius} name={node.name} />
@@ -294,7 +294,7 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
         const intersectionMarks = [];
         [source,target].forEach((node) => {
         if(node.type === "document") {
-            const shape = transformPointsWithMatrix(nodeShapeFromName(node.type), transformationMatrixSkew(node.x,node.y,nodeRadius*4,nodeRadius,0) );
+            const shape = transformPointsWithMatrix(nodeShapeFromName(node.type), transformationMatrixSkew(node.x,node.y,nodeRadius*4,nodeRadius*4,0) );
             const intersectingPoints = getIntersectingPoints(line,shape);
             intersectionMarks.push(intersectingPoints.map((point,i) => <IntersectionMark key={"intersection_"+i} x={point.x} y={point.y} />));
         }
@@ -338,7 +338,6 @@ function GraphSvg({ nodes, edges, velocityDecay, forces, nodeRadius, width, heig
                     {listEdges}
 
                     {listNodes}
-                    
                     {intersectionMarksOnDocuments}
 
                 </svg>

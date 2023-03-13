@@ -3,7 +3,7 @@ import  Polygon  from "./Polygon";
 import { asSvgMatrix,transformationMatrix } from "./geometry"
 
 function ShapeNode({x,y,index,name,locked,shape,size}) {
-    const lock_icon = locked ? <LockIcon x={x-size*2} y={y-size*0.8} radius={size*0.15} id={"locker_node_"+index} /> : null;
+    const lock_icon = locked ? <LockIcon x={x-size*2} y={y-size*10} radius={size*10} id={"locker_node_"+index} /> : null;
     const transformMatrix = transformationMatrix(x,y,size);
     const transform = asSvgMatrix( transformMatrix);
     const polygon = <Polygon transform={transform} vertices={shape} className="document-path" id={"node_" + index}  />
